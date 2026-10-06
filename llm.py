@@ -7,11 +7,7 @@ from ollama import Client, ResponseError
 from pydantic import ValidationError
 
 from models import ProductRequirements
-from prompts import (
-    EXTRACTION_INSTRUCTIONS,
-    GROUNDED_ANSWER_INSTRUCTIONS,
-    build_grounded_prompt,
-)
+from prompts import EXTRACTION_INSTRUCTIONS
 
 DEFAULT_MODEL = "llama3.1:latest"
 DEFAULT_HOST = "http://localhost:11434"
@@ -81,47 +77,3 @@ def extract_product_requirements(user_input: str) -> ProductRequirements:
         raise LLMResponseError(
             "El modelo devolvió una respuesta que no cumple el esquema esperado."
         ) from error
-
-
-# Genera una respuesta basada exclusivamente en el contexto recuperado.
-def generate_grounded_answer(user_input: str, context: str) -> str:
-    """Genera una respuesta limitada a la evidencia recuperada."""
-
-    cleaned_input = user_input.strip()
-    if not cleaned_input:
-        raise ValueError("La pregunta no puede estar vacÃ­a.")
-    if not context.strip():
-        return "No tengo informaciÃ³n suficiente en la base de conocimiento para responder."
-
-    load_dotenv()
-    model = os.getenv("OLLAMA_MODEL") or DEFAULT_MODEL
-    host = os.getenv("OLLAMA_HOST") or DEFAULT_HOST
-    client = Client(host=host)
-
-    try:
-        response = client.chat(
-            model=model,
-            messages=[
-                {"role": "system", "content": GROUNDED_ANSWER_INSTRUCTIONS},
-                {
-                    "role": "user",
-                    "content": build_grounded_prompt(cleaned_input, context),
-                },
-            ],
-            options={"temperature": 0},
-        )
-    except ConnectionError as error:
-        raise LLMError(
-            "No se pudo conectar con Ollama. VerificÃ¡ que estÃ© instalado y ejecutÃ¡ndose."
-        ) from error
-    except ResponseError as error:
-        if error.status_code == 404:
-            raise LLMConfigurationError(
-                f"No se encontrÃ³ el modelo '{model}'. Instalalo con: ollama pull {model}"
-            ) from error
-        raise LLMError("Ollama no pudo generar la respuesta.") from error
-
-    answer = response.message.content.strip() if response.message.content else ""
-    if not answer:
-        raise LLMResponseError("El modelo no devolviÃ³ una respuesta.")
-    return answer

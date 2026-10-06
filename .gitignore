@@ -31,9 +31,6 @@ dist/
 *.egg-info/
 .eggs/
 
-# Generated local RAG/vector database
-storage/vector_store/
-
 # Jupyter temporary files
 .ipynb_checkpoints/
 
