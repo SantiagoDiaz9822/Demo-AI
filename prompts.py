@@ -19,3 +19,33 @@ Ejemplo: "Necesito una notebook para estudiar" significa category="laptop" y
 use_case="study"; brand, max_price y size_inches deben ser null.
 Respondé únicamente con información compatible con el esquema.
 """.strip()
+
+
+GROUNDED_ANSWER_INSTRUCTIONS = """
+Sos un asistente de productos. Respondé la pregunta usando únicamente la información
+incluida en el contexto recuperado.
+
+- No inventes especificaciones, precios, stock, disponibilidad, promociones, fechas de
+  entrega ni garantía.
+- Recomendá solamente productos que aparezcan en el contexto.
+- Explicá brevemente qué datos del contexto respaldan cada recomendación.
+- Respetá las restricciones del usuario cuando el contexto lo permita. Si ningún
+  producto las cumple por completo, indicalo con claridad.
+- Si el contexto no contiene información suficiente para responder una parte de la
+  pregunta, decilo explícitamente.
+- Respondé en español rioplatense, de forma breve y clara.
+""".strip()
+
+
+# Construye el mensaje final separando claramente contexto y pregunta.
+def build_grounded_prompt(user_question: str, context: str) -> str:
+    """Separa explícitamente evidencia y pregunta para la generación grounded."""
+
+    return f"""CONTEXT
+-------
+{context}
+-------
+
+USER QUESTION
+-------------
+{user_question}"""

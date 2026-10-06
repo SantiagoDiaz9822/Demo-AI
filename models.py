@@ -1,4 +1,4 @@
-"""Modelos de datos de la Demo V0."""
+"""Modelos de datos compartidos por las demos V0 y V1."""
 
 from typing import Self
 
@@ -54,3 +54,42 @@ class ProductRequirements(BaseModel):
         if not self.use_case:
             self.use_case = None
         return self
+
+
+# Representa y valida una fila de producto proveniente del Excel.
+class ProductRecord(BaseModel):
+    """Una fila validada de la hoja ``Products``."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    product_id: str = Field(min_length=1)
+    category: str = Field(min_length=1)
+    brand: str | None = None
+    product_name: str = Field(min_length=1)
+    price_usd: float | None = None
+    size_inches: float | None = None
+    resolution: str | None = None
+    refresh_rate_hz: float | None = None
+    usb_c: bool | None = None
+    power_delivery_w: float | None = None
+    connectivity: str | None = None
+    recommended_use: str | None = None
+    description: str | None = None
+    features: str | None = None
+
+
+# Agrupa el texto que se vectoriza y la metadata estructurada del producto.
+class RAGDocument(BaseModel):
+    """Texto para embeddings junto con metadata estructurada."""
+
+    text: str = Field(min_length=1)
+    metadata: dict[str, str | int | float | bool]
+
+
+# Representa un producto recuperado junto con su distancia de similitud.
+class RetrievedProduct(BaseModel):
+    """Producto devuelto por Chroma y su distancia coseno."""
+
+    text: str
+    metadata: dict[str, str | int | float | bool]
+    distance: float

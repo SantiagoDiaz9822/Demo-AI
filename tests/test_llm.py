@@ -56,3 +56,32 @@ def test_reports_an_invalid_structured_response(
 
     with pytest.raises(llm.LLMResponseError, match="no cumple el esquema"):
         llm.extract_product_requirements("Necesito un monitor")
+
+
+def test_generates_answer_with_only_retrieved_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class FakeClient:
+        def __init__(self, *, host: str) -> None:
+            pass
+
+        def chat(self, **kwargs: object) -> object:
+            captured.update(kwargs)
+            message = type("FakeMessage", (), {"content": "Respuesta grounded"})()
+            return type("FakeResponse", (), {"message": message})()
+
+    monkeypatch.setattr(llm, "load_dotenv", lambda: None)
+    monkeypatch.setattr(llm, "Client", FakeClient)
+
+    result = llm.generate_grounded_answer(
+        "¿Cuál conviene?", "Product: Demo\nPrice: USD 100"
+    )
+
+    assert result == "Respuesta grounded"
+    messages = captured["messages"]
+    assert messages[0]["content"] == llm.GROUNDED_ANSWER_INSTRUCTIONS
+    assert "Product: Demo" in messages[1]["content"]
+    assert "¿Cuál conviene?" in messages[1]["content"]
+    assert captured["options"] == {"temperature": 0}
