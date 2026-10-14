@@ -81,10 +81,6 @@ def main() -> None:
             print("\nHasta luego.")
             return
 
-        if not user_input.strip():
-            print("La descripción no puede estar vacía.")
-            continue
-
         try:
             print("\n--------------------------------")
             print("1. Requisitos detectados")
